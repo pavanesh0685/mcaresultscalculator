@@ -49,13 +49,37 @@ table{width:100%;border-collapse:collapse;font-size:10.5px}thead{display:table-h
 
 @media(max-width:700px){.fields{grid-template-columns:1fr 1fr}.report{padding:24px 18px}.top-center .university{font-size:17px}.seal{width:44px;height:44px;font-size:18px}.meta{grid-template-columns:1fr}.report table{font-size:9px}.summary{grid-template-columns:1fr}}
 @media(max-width:450px){.fields{grid-template-columns:1fr}.report{padding:20px 13px}.ref{min-width:58px;font-size:8px}.top-center .university{font-size:14px}.top-center .document-title{font-size:11px}}
-@page{size:A4;margin:12mm}
+@page{size:A4 portrait;margin:6mm}
 @media print{
- body{background:white;font-size:11px}.app{max-width:none;padding:0}.intro,.actions,.editor,.help,.status{display:none!important}
- .report{max-width:none;margin:0;padding:18px 22px;box-shadow:none;border:0;min-height:0}.report:before{inset:4px}
- .report-top{padding-bottom:8px}.top-center .university{font-size:20px}table{font-size:9px}th,td{padding:4px 3px}
- .semester-row{break-after:avoid}.subject-row{break-inside:avoid}.summary{break-inside:avoid}.grade-scale{break-inside:avoid}.signatures{break-inside:avoid}
- .watermark{color:#263d5809}.disclaimer{font-size:8px}
+ html,body{width:100%;height:auto;background:#fff!important;font-size:8px!important}
+ body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .app{width:100%;max-width:none;margin:0;padding:0}
+ .intro,.actions,.editor,.help,.status{display:none!important}
+ .report{width:100%;max-width:none;margin:0;padding:7px 10px;box-shadow:none;border:0;min-height:0;break-inside:avoid;page-break-inside:avoid}
+ .report:before{inset:3px}
+ .report:after{inset:7px}
+ .report-inner{padding:0}
+ .report-top{padding-bottom:4px;gap:8px;border-bottom-width:1px}
+ .seal{width:40px;height:40px;font-size:16px}
+ .seal img{max-width:34px;max-height:34px}
+ .top-center .university{font-size:15px;line-height:1.1}
+ .top-center .document-title{font-size:10px;line-height:1.1;margin-top:2px}
+ .top-center .location,.top-center .subtitle{font-size:7px;line-height:1.1}
+ .ref{font-size:7px;min-width:42px}
+ .meta{gap:3px 8px;margin:5px 0;font-size:7px}
+ .meta div{padding:1px 0}
+ .report table{width:100%;font-size:6.8px;line-height:1.05;border-collapse:collapse}
+ .report th,.report td{padding:1.2px 2px;line-height:1.05}
+ .report th{font-size:6.5px}
+ .gradeInput{max-width:35px;padding:0;font-size:7px}
+ .semester-row{break-after:avoid;page-break-after:avoid}
+ .subject-row{break-inside:avoid;page-break-inside:avoid}
+ .summary{gap:6px;margin:5px 0 3px;font-size:7px;break-inside:avoid;page-break-inside:avoid}
+ .summary>div{padding:3px}
+ .grade-scale{margin-top:4px;font-size:6.5px;break-inside:avoid;page-break-inside:avoid}
+ .signatures{gap:12px;margin:10px 3px 2px;font-size:7px;break-inside:avoid;page-break-inside:avoid}
+ .watermark{font-size:30px;color:#263d5808}
+ .disclaimer{font-size:6px;line-height:1.1;margin-top:3px}
 }
 </style>
 </head>
@@ -63,7 +87,7 @@ table{width:100%;border-collapse:collapse;font-size:10.5px}thead{display:table-h
 <div class="app">
 <header class="intro"><h1>MCA Consolidated Grade Report</h1><p>Prepare a formal, print-ready consolidated academic statement for all four semesters. Enter institution and student details, select grades, submit to calculate the total, then save the memo as PDF or share the result.</p></header>
 <div class="actions">
-<button class="btn" id="printBtn">Save as PDF</button><button class="btn light" id="shareBtn">Share result</button><button class="btn red" id="clearBtn">Clear grades</button>
+<button type="button" class="btn" id="printBtn">Save as PDF</button><button type="button" class="btn light" id="shareBtn">Share result</button><button type="button" class="btn red" id="clearBtn">Clear grades</button>
 </div>
 <section class="editor">
 <h2>Institution and student information</h2>
@@ -81,7 +105,7 @@ table{width:100%;border-collapse:collapse;font-size:10.5px}thead{display:table-h
 <div class="field"><label for="programme">Programme</label><input id="programme" value="Master of Computer Applications (MCA)"></div>
 <div class="field"><label for="scheme">Academic scheme</label><input id="scheme" value="Choice Based Credit System (CBCS)"></div>
 </div>
-<div class="help">These fields are editable. The university name is prefilled from your BCA consolidated grade report; change it if your MCA programme is under another university.</div>
+<div class="help">These fields are editable. change it if your MCA programme is under another university.</div>
 </section>
 <section class="report" id="report">
 <div class="watermark">UNOFFICIAL GENERATED COPY</div>
@@ -164,25 +188,31 @@ function submitAndCalculate(){
  const result=sum();
  if(result.cg===null){
   hasSubmitted=false;
-  $("status").textContent="No passing grades entered yet. Select grades S, A, B, C, D or E. F grades are counted as fails and excluded from CGPA.";
+  $("status").textContent="No passing grades entered yet. Select at least one passing grade (S, A, B, C, D or E) to calculate a CGPA. You can still print this blank template.";
   return null;
  }
  hasSubmitted=true;
  $("status").textContent=`Calculation complete — CGPA: ${result.cg.toFixed(2)} | Counted credits: ${result.totalC.toFixed(1)} | Failed subjects: ${result.fail}.`;
  return result;
 }
-$("submitResults").onclick=()=>{
+$("submitResults").addEventListener("click",()=>{
  const result=submitAndCalculate();
- if(result)$("outCgpa").scrollIntoView({behavior:"smooth",block:"center"});
-};
-$("printBtn").onclick=()=>{
- // Calculate automatically even if the separate Submit button was not pressed.
- const result=submitAndCalculate();
- if(!result)return;
- // Native print dialog works locally, in Live Server, and without third-party scripts.
- window.print();
-};
-$("clearBtn").onclick=()=>{
+ if(result) $("outCgpa").scrollIntoView({behavior:"smooth",block:"center"});
+});
+
+$("printBtn").addEventListener("click",()=>{
+ try{
+  sync();
+  // Printing is deliberately not blocked by empty grades.
+  // The user can choose "Save as PDF" in the browser print dialog.
+  window.print();
+ }catch(error){
+  $("status").textContent="Could not open the print dialog: "+error.message+". Try Ctrl+P / Cmd+P.";
+  $("status").style.display="block";
+ }
+});
+
+$("clearBtn").addEventListener("click",()=>{
  document.querySelectorAll(".gradeInput").forEach(x=>x.value="");
  hasSubmitted=false;
  $("outCgpa").textContent="—";$("outDivision").textContent="—";
@@ -192,14 +222,12 @@ $("clearBtn").onclick=()=>{
   const cell=$("semGpaCell"+i);if(cell)cell.textContent="—";
  });
  $("status").textContent="Grades cleared. Passing months are retained. Enter grades and submit again.";
-};
+ $("status").style.display="block";
+});
+
 function makeShareText(){
- const r=submitAndCalculate();if(!r)return null;
- return `MCA CONSOLIDATED GRADE REPORT
-University: ${$("university").value}
-College: ${$("college").value}
-Student: ${$("student").value}
-Roll number: ${$("roll").value}
+ const r=submitAndCalculate();
+ const resultLines = r ? `
 Semester I SGPA: ${r.semOut[0].sg===null?"—":r.semOut[0].sg.toFixed(2)} (APR, 2025)
 Semester II SGPA: ${r.semOut[1].sg===null?"—":r.semOut[1].sg.toFixed(2)} (NOV, 2025)
 Semester III SGPA: ${r.semOut[2].sg===null?"—":r.semOut[2].sg.toFixed(2)} (APR, 2026)
@@ -207,19 +235,52 @@ Semester IV SGPA: ${r.semOut[3].sg===null?"—":r.semOut[3].sg.toFixed(2)} (OCT,
 Overall CGPA: ${r.cg.toFixed(2)}
 Final result: ${r.division}
 Credits counted: ${r.totalC.toFixed(1)}
-Failed subjects: ${r.fail}
+Failed subjects: ${r.fail}` : `
+Grades have not been entered/calculated yet.`;
+ return `MCA CONSOLIDATED GRADE REPORT
+University: ${$("university").value}
+College: ${$("college").value}
+Student: ${$("student").value}
+Roll number: ${$("roll").value}
+${resultLines}
+
+Open the report: ${window.location.href}
 
 Unofficial student-generated academic summary.`;
 }
-$("shareBtn").onclick=async()=>{
- const text=makeShareText();if(!text)return;
+
+$("shareBtn").addEventListener("click",async()=>{
+ const shareText=makeShareText();
+ const shareData={title:"MCA Consolidated Grade Report",text:shareText,url:window.location.href};
  try{
-  if(navigator.share){await navigator.share({title:"MCA Consolidated Grade Report",text});$("status").textContent="Share menu opened.";}
-  else if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(text);$("status").textContent="Result summary copied. Paste it into WhatsApp, email or another app.";}
-  else{window.prompt("Copy your consolidated result:",text);$("status").textContent="Copy the result text from the dialog to share.";}
- }catch(e){
-  if(e.name!=="AbortError"){window.prompt("Copy your consolidated result:",text);$("status").textContent="Automatic sharing is unavailable. Copy the text from the prompt.";}
+  if(navigator.share && (!navigator.canShare || navigator.canShare(shareData))){
+   await navigator.share(shareData);
+   $("status").textContent="Share menu opened.";
+  }else{
+   throw new Error("Native sharing is not available in this browser.");
+  }
+ }catch(error){
+  if(error && error.name==="AbortError") return; // User intentionally closed share sheet.
+  try{
+   // Clipboard API may be unavailable; use the legacy copy fallback as well.
+   if(navigator.clipboard && window.isSecureContext){
+    await navigator.clipboard.writeText(shareText);
+   }else{
+    const box=document.createElement("textarea");
+    box.value=shareText;box.setAttribute("readonly","");
+    box.style.position="fixed";box.style.opacity="0";document.body.appendChild(box);
+    box.select();
+    const copied=document.execCommand("copy");
+    box.remove();
+    if(!copied) throw new Error("Clipboard copy was blocked.");
+   }
+   $("status").textContent="Result summary copied. Paste it into WhatsApp, email or another app.";
+  }catch(copyError){
+   window.prompt("Copy your consolidated result:",shareText);
+   $("status").textContent="Automatic sharing is unavailable. Copy the text from the dialog.";
+  }
  }
-};
+ $("status").style.display="block";
+});
 </script>
 </body></html>
