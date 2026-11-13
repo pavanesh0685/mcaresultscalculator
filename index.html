@@ -5,6 +5,30 @@
 <meta name="theme-color" content="#f3f0e8">
 <title>MCA Consolidated Grade Report</title>
 <style>
+ /* Print-friendly grade display */
+.print-grade-value {
+    display: none;
+}
+
+@media print {
+    .gradeInput {
+        display: none !important;
+    }
+
+    .print-grade-value {
+        display: inline-block !important;
+        min-width: 18px;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        color: #111 !important;
+        font: bold 7px Arial, sans-serif !important;
+        text-align: center !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+    }
+}
 :root{--ink:#202020;--muted:#666;--line:#b9b4a8;--paper:#fffefa;--bg:#e9e6de;--accent:#233b58;--gold:#b18a43}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Georgia,"Times New Roman",serif}
 .app{max-width:1160px;margin:0 auto;padding:28px 18px 60px}.intro{font-family:Arial,sans-serif;max-width:900px;margin:0 auto 20px}.intro h1{font-size:clamp(25px,4vw,38px);margin:0 0 7px;color:#1c2f46;letter-spacing:-.03em}.intro p{color:#5e625f;margin:0}
@@ -142,6 +166,36 @@ table{width:100%;border-collapse:collapse;font-size:10.5px}thead{display:table-h
 <div class="status" id="status" aria-live="polite"></div>
 </div>
 <script>
+ // Display plain-text grades when printing or saving PDF
+function preparePrintGrades() {
+
+    document.querySelectorAll("select.gradeInput").forEach(select => {
+
+        let label = select.nextElementSibling;
+
+        if (!label || !label.classList.contains("print-grade-value")) {
+            label = document.createElement("span");
+            label.className = "print-grade-value";
+
+            select.insertAdjacentElement("afterend", label);
+        }
+
+        const selected = select.options[select.selectedIndex];
+        const value = selected ? selected.textContent.trim() : "";
+
+        label.textContent =
+            (select.value && value !== "—") ? value : "—";
+    });
+}
+
+// Before opening print dialog
+window.addEventListener("beforeprint", preparePrintGrades);
+
+// Clean up after printing
+window.addEventListener("afterprint", () => {
+    document.querySelectorAll(".print-grade-value")
+        .forEach(label => label.remove());
+});
 const G={S:10,A:9,B:8,C:7,D:6,E:5,F:0};
 const sems=[
 {title:"I SEMESTER",rows:[["PC101","Mathematical Foundations of Computer Science",4],["PC102","Data Structures Using C",4],["PC13A","Object Oriented Programming Using Java",4],["PC14A","Computer Architecture",4],["PC15A","Probability and Statistics",4],["PC16A","Managerial Economics and Accountancy",4],["LAB11","Data Structures Using C (Lab)",1.5],["LAB21","Java Programming (Lab)",1.5],["LAB41","Soft Skills (Lab)",1.5]]},
